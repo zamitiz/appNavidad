@@ -9,10 +9,16 @@
   "orientation": "portrait",
   "icons": [
     {
+      "src": "hat_1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+  {
       "src": "hat.png",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+  }
   ]
 }

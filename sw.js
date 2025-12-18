@@ -2,7 +2,7 @@ const CACHE_NAME = 'xmas-cache-v1';
 const ASSETS = [
   './',
   './index.html',
-  './icon.svg',
+  './hat.png',
   './manifest.json',
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Roboto:wght@300;400;700&display=swap'

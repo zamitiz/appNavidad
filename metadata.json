@@ -1,7 +1,13 @@
 {
-  "name": "Navidad Mágica",
-  "description": "Una experiencia interactiva navideña con sorpresas, trivia y postales digitales.",
+  "name": "Navidad Mágica: Cuenta Regresiva",
+  "short_name": "Navidad Mágica",
+  "description": "Cuenta atrás interactiva para Navidad y Año Nuevo con trivia, postales personalizadas y rastreador de Santa.",
+  "version": "1.0.0",
+  "author": "Espíritu Navideño",
+  "category": "Entertainment",
   "requestFramePermissions": [
     "camera"
-  ]
+  ],
+  "theme_color": "#0f2027",
+  "background_color": "#0f2027"
 }

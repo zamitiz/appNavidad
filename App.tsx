@@ -12,13 +12,15 @@ interface SimulatedDate {
   day: number;
 }
 
+// Variable global para capturar el evento de instalación fuera del ciclo de vida de React
+let caughtDeferredPrompt: any = null;
+
 const App: React.FC = () => {
   const [simulatedDate, setSimulatedDate] = useState<SimulatedDate | null>(null);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
   
   // PWA Install State
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
 
   // States for different holidays
@@ -30,46 +32,63 @@ const App: React.FC = () => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    window.addEventListener('beforeinstallprompt', (e) => {
+    const handleBeforeInstall = (e: any) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      caughtDeferredPrompt = e;
       setShowInstallBtn(true);
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+
+    // Si el evento ya se capturó antes del montaje
+    if (caughtDeferredPrompt) {
+      setShowInstallBtn(true);
+    }
 
     window.addEventListener('appinstalled', () => {
       setShowInstallBtn(false);
-      setDeferredPrompt(null);
+      caughtDeferredPrompt = null;
     });
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+    };
   }, []);
 
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setShowInstallBtn(false);
+  const handleInstallClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!caughtDeferredPrompt) return;
+    
+    try {
+      caughtDeferredPrompt.prompt();
+      const { outcome } = await caughtDeferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setShowInstallBtn(false);
+        caughtDeferredPrompt = null;
+      }
+    } catch (err) {
+      console.error("Error en la instalación:", err);
     }
-    setDeferredPrompt(null);
   };
 
   // Audio Control Logic
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    
     const isCelebration = isChristmas || isNewYearDay;
-    if (isCelebration) {
-      if (audio.paused) {
-        audio.volume = 0.4;
-        audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
-      }
-    } else {
-      if (!audio.paused) {
-        audio.pause();
-        audio.currentTime = 0;
+    if (isCelebration && isPlaying) {
+      audio.volume = 0.4;
+      audio.play().catch(() => {
         setIsPlaying(false);
-      }
+        console.log("Autoplay bloqueado por el navegador");
+      });
+    } else if (!isCelebration) {
+      audio.pause();
+      audio.currentTime = 0;
+      setIsPlaying(false);
     }
-  }, [isChristmas, isNewYearDay]);
+  }, [isChristmas, isNewYearDay, isPlaying]);
 
   const toggleMusic = () => {
     if (!audioRef.current) return;
@@ -77,7 +96,9 @@ const App: React.FC = () => {
       audioRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+      audioRef.current.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
     }
   };
 
@@ -94,7 +115,7 @@ const App: React.FC = () => {
 
         const checkIsChristmas = month === 11 && day === 25;
         const checkIsNewYearDay = month === 0 && day === 1;
-        const checkIsNewYearPending = month === 11 && day > 25;
+        const checkIsNewYearPending = month === 11 && (day > 25 || (month === 11 && day === 31));
 
         setIsChristmas(checkIsChristmas);
         setIsNewYearDay(checkIsNewYearDay);
@@ -103,10 +124,6 @@ const App: React.FC = () => {
         let target: Date;
         if (checkIsNewYearPending) {
             target = new Date(`January 1, ${year + 1} 00:00:00`);
-        } else if (checkIsChristmas || checkIsNewYearDay) {
-            target = now; 
-        } else if (month === 0 && day > 1) {
-             target = new Date(`December 25, ${year} 00:00:00`);
         } else {
              target = new Date(`December 25, ${year} 00:00:00`);
         }
@@ -152,7 +169,7 @@ const App: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-b from-xmas-dark via-xmas-blue to-xmas-light flex flex-col items-center justify-center text-white overflow-hidden relative selection:bg-xmas-gold selection:text-black">
       <Snowfall />
       
-      <audio ref={audioRef} loop>
+      <audio ref={audioRef} loop crossOrigin="anonymous">
           <source src="https://files.freemusicarchive.org/storage-freemusicarchive-org/music/no_curator/Kevin_MacLeod/Jazz_Sampler/Kevin_MacLeod_-_Jingle_Bells.mp3" type="audio/mpeg" />
       </audio>
 
@@ -160,9 +177,9 @@ const App: React.FC = () => {
       {showInstallBtn && (
         <button 
           onClick={handleInstallClick}
-          className="fixed top-4 right-4 z-[60] bg-xmas-gold text-xmas-dark px-4 py-2 rounded-full font-bold text-sm shadow-xl flex items-center gap-2 animate-bounce-slow"
+          className="fixed top-6 right-6 z-[60] bg-xmas-gold text-xmas-dark px-5 py-2.5 rounded-full font-bold text-sm shadow-[0_0_20px_rgba(255,215,0,0.4)] flex items-center gap-2 animate-bounce-slow hover:scale-105 active:scale-95 transition-transform"
         >
-          <Download size={16} /> Instalar App
+          <Download size={18} /> Instalar App
         </button>
       )}
 
@@ -204,7 +221,7 @@ const App: React.FC = () => {
       </main>
 
       <footer className="z-10 py-6 text-white/40 text-xs text-center">
-        Versión App 1.0 • Creado con espíritu navideño
+        Versión App 1.1 • Creado con espíritu navideño
       </footer>
 
       <DebugControls onSimulate={setSimulatedDate} currentSimulatedDate={simulatedDate} />

@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'xmas-cache-v3';
+const CACHE_NAME = 'xmas-cache-v4';
 const ASSETS_TO_CACHE = [
   './index.html',
   './icon.svg',
@@ -22,7 +22,6 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Borrando caché antigua:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -32,22 +31,17 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Estrategia: Network First para evitar que la app se quede "atrapada" en una versión rota
+  // Estrategia Network-First para archivos HTML/JS de la raíz
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match('./index.html'))
+    );
+    return;
+  }
+
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // Si la red responde, guardamos en caché y devolvemos
-        if (event.request.method === 'GET' && response.status === 200) {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // Si falla la red, buscamos en caché
-        return caches.match(event.request);
-      })
+    caches.match(event.request).then((response) => {
+      return response || fetch(event.request);
+    })
   );
 });

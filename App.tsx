@@ -5,7 +5,7 @@ import Snowfall from './components/Snowfall';
 import CountdownTimer from './components/CountdownTimer';
 import SurpriseSection from './components/SurpriseSection';
 import DebugControls from './components/DebugControls';
-import { Sparkles, Volume2, VolumeX, Download, Share2 } from 'lucide-react';
+import { Sparkles, Volume2, VolumeX, Share2 } from 'lucide-react';
 
 interface SimulatedDate {
   month: number;
@@ -16,43 +16,18 @@ const App: React.FC = () => {
   const [simulatedDate, setSimulatedDate] = useState<SimulatedDate | null>(null);
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [timeLeft, setTimeLeft] = useState<TimeLeft>({ days: 0, hours: 0, minutes: 0, seconds: 0 });
-  const [showInstallBtn, setShowInstallBtn] = useState(false);
   const [isChristmas, setIsChristmas] = useState(false);
   const [isNewYearDay, setIsNewYearDay] = useState(false);
   const [isNewYearPending, setIsNewYearPending] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => {
-    const checkInstallEligibility = () => {
-      if ((window as any).deferredPrompt) setShowInstallBtn(true);
-    };
-    checkInstallEligibility();
-    window.addEventListener('pwa-install-ready', checkInstallEligibility);
-    window.addEventListener('appinstalled', () => {
-      setShowInstallBtn(false);
-      (window as any).deferredPrompt = null;
-    });
-    return () => window.removeEventListener('pwa-install-ready', checkInstallEligibility);
-  }, []);
-
-  const handleInstallClick = async () => {
-    const promptEvent = (window as any).deferredPrompt;
-    if (!promptEvent) return;
-    promptEvent.prompt();
-    const { outcome } = await promptEvent.userChoice;
-    if (outcome === 'accepted') {
-      setShowInstallBtn(false);
-      (window as any).deferredPrompt = null;
-    }
-  };
-
   const handleShareApp = async () => {
     if (navigator.share) {
       try {
         await navigator.share({
           title: 'Navidad Mágica',
-          text: '¡Mira esta cuenta regresiva para Navidad y crea tus propias postales! 🎄✨',
+          text: '¡Mira esta cuenta regresiva para Navidad! 🎄✨',
           url: window.location.href,
         });
       } catch (err) {
@@ -86,7 +61,7 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const calculateTime = () => {
         let now = new Date();
         if (simulatedDate !== null) {
             now = new Date(now.getFullYear(), simulatedDate.month, simulatedDate.day, 10, 0, 0);
@@ -122,7 +97,10 @@ const App: React.FC = () => {
                 seconds: Math.floor((diff / 1000) % 60),
             });
         }
-    }, 1000);
+    };
+    
+    calculateTime();
+    const timer = setInterval(calculateTime, 1000);
     return () => clearInterval(timer);
   }, [simulatedDate]);
 
@@ -136,7 +114,7 @@ const App: React.FC = () => {
         if (day === 24) return "¡Ya casi es hora! Santa se acerca.";
         if (day >= 22) return "¡Haz una postal navideña!";
     }
-    return "Faltan pocos días... ¡Habrá una sorpresa desde el día 22!";
+    return "Faltan pocos días...";
   };
 
   const getMainTitle = () => {
@@ -154,11 +132,6 @@ const App: React.FC = () => {
       </audio>
 
       <div className="fixed top-6 right-6 z-[60] flex flex-col gap-3 items-end">
-        {showInstallBtn && (
-          <button onClick={handleInstallClick} className="bg-xmas-gold text-xmas-dark px-5 py-2.5 rounded-full font-bold text-sm shadow-[0_0_20px_rgba(255,215,0,0.5)] flex items-center gap-2 animate-bounce-slow hover:scale-105 transition-transform">
-            <Download size={18} /> Instalar App
-          </button>
-        )}
         <button onClick={handleShareApp} className="bg-white/10 hover:bg-white/20 text-white p-2.5 rounded-full backdrop-blur border border-white/20 shadow-lg">
           <Share2 size={20} />
         </button>
@@ -180,7 +153,7 @@ const App: React.FC = () => {
           )}
         </header>
 
-        {!(isChristmas || isNewYearDay) && <CountdownTimer timeLeft={timeLeft} />}
+        <CountdownTimer timeLeft={timeLeft} />
         <h2 className="text-xl md:text-2xl font-light text-gray-200 mt-4 tracking-wide">{getStatusMessage()}</h2>
         {!isNewYearPending && !isNewYearDay && <SurpriseSection currentDate={currentDate} />}
       </main>

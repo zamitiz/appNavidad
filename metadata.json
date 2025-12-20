@@ -1,8 +1,8 @@
 {
   "name": "Navidad Mágica: Cuenta Regresiva",
   "short_name": "Navidad Mágica",
-  "description": "Cuenta atrás interactiva para Navidad y Año Nuevo con postales personalizadas y rastreador de Santa.",
-  "version": "1.0.3",
+  "description": "Cuenta atrás interactiva para Navidad y Año Nuevo con trivia, postales personalizadas y rastreador de Santa.",
+  "version": "1.0.0",
   "package_name": "io.github.zamitiz.adn",
   "author": "Espíritu Navideño",
   "category": "Entertainment",

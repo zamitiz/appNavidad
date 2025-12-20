@@ -49,7 +49,6 @@
       .snowflake { position: fixed; color: white; z-index: 0; pointer-events: none; animation: fall linear infinite; }
       body::-webkit-scrollbar { display: none; }
       body { -ms-overflow-style: none; scrollbar-width: none; overflow-x: hidden; background-color: #0f2027; margin: 0; padding: 0; }
-      #boot-error { display: none; position: fixed; inset: 0; background: #0f2027; color: white; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 2rem; text-align: center; font-family: sans-serif; }
     </style>
 <script type="importmap">
 {
@@ -65,61 +64,15 @@
 </script>
 </head>
 <body>
-    <div id="root">
-        <div style="height: 100vh; display: flex; align-items: center; justify-content: center; background: #0f2027; color: #ffd700; font-family: sans-serif;">
-            <div style="text-align: center;">
-                <h2 style="margin-bottom: 1rem; font-family: 'Mountains of Christmas', cursive; font-size: 2.5rem; animation: pulse-slow 2s infinite;">Cargando Navidad...</h2>
-                <div style="width: 45px; height: 45px; border: 4px solid #ffd700; border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto;"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="boot-error">
-        <h1 style="color: #ffd700; font-size: 1.5rem; margin-bottom: 1rem;">¡Ups! El espíritu navideño se distrajo</h1>
-        <p style="color: #cbd5e1; margin-bottom: 2rem;">La aplicación está tardando más de lo normal en cargar.</p>
-        <button onclick="clearAndReload()" style="background: #ffd700; color: #0f2027; border: none; padding: 0.75rem 1.5rem; font-weight: bold; border-radius: 50px; cursor: pointer;">
-            Reiniciar Aplicación
-        </button>
-    </div>
+    <div id="root"></div>
 
     <script>
-      // Registro de Service Worker mejorado para evitar conflictos de origen en entornos de previsualización
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          // Usamos una ruta relativa explícita
           navigator.serviceWorker.register('./sw.js', { scope: './' })
-            .then(reg => console.log('Service Worker registrado con éxito:', reg.scope))
-            .catch(err => {
-              console.warn('Registro de SW fallido (posiblemente por el entorno de previsualización):', err.message);
-            });
+            .catch(err => console.warn('SW Register skipped:', err.message));
         });
       }
-
-      const bootTimer = setTimeout(() => {
-        const root = document.getElementById('root');
-        if (root && (root.innerHTML.includes('Cargando Navidad') || root.children.length === 0)) {
-          // Solo mostramos el error si realmente no hay nada renderizado tras 8 segundos
-          if (root.children.length > 0 && !root.innerHTML.includes('Cargando Navidad')) return;
-          document.getElementById('boot-error').style.display = 'flex';
-        }
-      }, 8000);
-
-      function clearAndReload() {
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.getRegistrations().then(registrations => {
-            for(let registration of registrations) registration.unregister();
-            window.location.reload();
-          });
-        } else {
-          window.location.reload();
-        }
-      }
-
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        window.deferredPrompt = e;
-        window.dispatchEvent(new CustomEvent('pwa-install-ready'));
-      });
     </script>
 </body>
 </html>

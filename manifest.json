@@ -2,7 +2,7 @@
 {
   "name": "Navidad Mágica: Cuenta Regresiva",
   "short_name": "Navidad Mágica",
-  "description": "Siente la magia de la Navidad con cuenta regresiva, sorpresas diarias y postales personalizadas.",
+  "description": "Vive la magia de la Navidad con este conteo y muchas sorpresas.",
   "id": "io.github.zamitiz.adn",
   "start_url": "./index.html",
   "display": "standalone",
@@ -12,11 +12,17 @@
   "categories": ["entertainment", "lifestyle"],
   "icons": [
     {
+      "src": "hat_1.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+  {
       "src": "hat.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any maskable"
-    }
+      "purpose": "maskable"
+  }
   ],
   "related_applications": [
     {
